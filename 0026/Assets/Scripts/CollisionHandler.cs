@@ -12,14 +12,29 @@ public class CollisionHandler : MonoBehaviour
     AudioSource _2audioSource;
     Movement _movement;
     bool isTransitioning = false;
+    //bool collisionDisable = true;
 
-    void Start()
+    private void Start()
     {
         _2audioSource = GetComponent<AudioSource>();
         _movement = GetComponent<Movement>();
     }
 
-    void OnCollisionEnter(Collision collision)
+    /*void Update()
+    {
+        DisableCollision();
+    }
+
+    void DisableCollision()
+    {
+        if (Input.GetKeyDown(KeyCode.C))
+        {
+            collisionDisable = !collisionDisable;
+            Debug.Log("Mexeeu");
+        }
+    }*/
+
+    private void OnCollisionEnter(Collision collision)
     {
         if (!isTransitioning)
         {
@@ -40,48 +55,70 @@ public class CollisionHandler : MonoBehaviour
             }
         }
     }
-    void OnTriggerEnter(Collider collided)
+    private void OnTriggerEnter(Collider collided)
     {
         collided.gameObject.SetActive(true);
     }
 
-    void StartVictorySequence() 
+    private void StartVictorySequence()
     {
         isTransitioning = true;
+        AudioStartVictorySeq();
+        _movement.enabled = false;
+        Invoke("LoadNextScene", 2f);
+    }
+
+    private void AudioStartVictorySeq()
+    {
         _2audioSource.Stop();
         _particleSuccess.Play();
         if (!_2audioSource.isPlaying)
             _2audioSource.PlayOneShot(_soundSuccess);
-        _movement.enabled = false;
-        Invoke ("LoadNextScene", 2f);
     }
 
-    void LoadNextScene() 
+    private void LoadNextScene()
     {
         int _currentSceneIndex = SceneManager.GetActiveScene().buildIndex;
         int _nextSceneIndex = ++_currentSceneIndex;
         if (_nextSceneIndex == SceneManager.sceneCountInBuildSettings)
-        { 
+        {
             _nextSceneIndex = 0;
         }
         SceneManager.LoadScene(_nextSceneIndex);
     }
 
-    void StartCrashSequence()
+    private void StartCrashSequence()
     {
         isTransitioning = true;
-        _2audioSource.Stop();
         _particleFailure.Play();
-        if (!_2audioSource.isPlaying)
-            _2audioSource.PlayOneShot(_soundFailure);
+        AudioStartCrashSeq();
         _movement.enabled = false;
-        Invoke("ReloadCurrentScene", 1f);
+        InvokeStartCrashSeq();
+
     }
 
-    void ReloadCurrentScene()
+    private void AudioStartCrashSeq()
+    {
+        _2audioSource.Stop();
+        if (!_2audioSource.isPlaying)
+            _2audioSource.PlayOneShot(_soundFailure);
+    }
+
+    private void InvokeStartCrashSeq()
+    {
+        Invoke("Disappear", 0.5f);
+        Invoke("ReloadCurrentScene", 1.5f);
+    }
+
+    private void Disappear()
+    {
+        GameObject.FindGameObjectWithTag("Player").SetActive(false);
+    }
+
+    private void ReloadCurrentScene()
     {
         int _currentSceneIndex = SceneManager.GetActiveScene().buildIndex;
-        if (_currentSceneIndex == SceneManager.sceneCountInBuildSettings) 
+        if (_currentSceneIndex == SceneManager.sceneCountInBuildSettings)
         {
             _currentSceneIndex = 0;
         }
